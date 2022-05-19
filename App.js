@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect  } from 'react';
 import { StyleSheet, Text, View, ScrollView, Dimensions, SafeAreaView, TouchableOpacity,Image,Alert, Modal, Pressable, Switch  } from 'react-native';
-import Barcode from 'react-native-barcode-expo';
+import { Camera, Permissions, Constants } from 'expo';
 import { Ionicons } from '@expo/vector-icons'; 
+import ImagePickerComponent from "./ImagePickerComponent";
+import callGoogleVisionAsync from "./helperFunctions.js";
 
 const {height:SCREEN_HEIGHT, width:SCREEN_WIDTH} = Dimensions.get('window');
 
 
 console.log(SCREEN_HEIGHT,SCREEN_WIDTH)
 
+
 export default function App() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isEnabled, setIsEnabled] = useState(false);
+  const [scanned, setScanned] = useState(false);
   const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+
+  const handleBarCodeScanned = ({ type, data }) => {
+    setScanned(true);
+    alert(`Bar code with type ${type} and data ${data} has been scanned!`);
+  };
+
   return (
     <SafeAreaView style={styles.main}>
-      
+      <View>
+      </View>
       <View style={styles.topMenu}>
 
         <TouchableOpacity style={styles.home_btn}>
@@ -22,8 +33,7 @@ export default function App() {
         </TouchableOpacity>
 
         <View style={{flex:2}}></View>
-        <TouchableOpacity style={styles.add_btn}>
-          <Ionicons name="add" size={24} color="black"/></TouchableOpacity>
+        <ImagePickerComponent onSubmit={callGoogleVisionAsync} />
         <View style={styles.setting_btn}>
           <Modal
             animationType="slide"
