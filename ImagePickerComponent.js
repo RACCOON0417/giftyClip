@@ -26,12 +26,12 @@ function ImagePickerComponent({ onSubmit }) {
       //setImage(result.uri);
       setText("Loading..");
       //alert(result.base64);
-      /*
+      
       const responseData = await onSubmit(result.base64).catch((error)=>{
         console.log("Api call error");
         alert(error.message);
-     });;
-     */
+     });
+     
      //alert(result.uri);
       let ret=await BarCodeScanner.scanFromURLAsync(result.uri, [BarCodeScanner.Constants.BarCodeType.qr,BarCodeScanner.Constants.BarCodeType.codabar,BarCodeScanner.Constants.BarCodeType.code39])
       .then((result)=>{
