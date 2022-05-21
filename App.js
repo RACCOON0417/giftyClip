@@ -56,6 +56,7 @@ export default function App() {
         </TouchableOpacity>
 
         <View style={{flex:2}}></View>
+
         <View style={styles.setting_btn}>
           <Modal
             animationType="slide"
@@ -98,13 +99,15 @@ export default function App() {
                     <Text style={styles.textStyle}>Close</Text>
                   </Pressable>
                 </View>
+                <ImagePickerComponent onSubmit={callGoogleVisionAsync} />
               </View>
             </View>
           </Modal>
           <TouchableOpacity  onPress={() => setaddCardVisible(true)}>
             <Ionicons name="add" size={24} color="black" /></TouchableOpacity>
         </View>
-        <ImagePickerComponent onSubmit={callGoogleVisionAsync} />
+
+
         <View style={styles.setting_btn}>
           <Modal
             animationType="slide"
@@ -118,15 +121,6 @@ export default function App() {
                 <Text style={styles.settingText}>Alarm Setting</Text>
             <Switch onValueChange={toggleSwitch} value={isEnabled}/>
                 </View>
-                <Text>Alarm Setting</Text>
-      <Switch
-        trackColor={{ false: '#767577', true: '#81b0ff' }}
-        thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-        ios_backgroundColor="#3e3e3e"
-        onValueChange={toggleSwitch}
-        value={isEnabled}
-      />
-    </View>
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
                   onPress={() => setModalVisible(!modalVisible)}>
@@ -138,12 +132,14 @@ export default function App() {
           <TouchableOpacity  onPress={() => setModalVisible(true)}>
             <Ionicons name="ios-settings-outline" size={24} color="black" /></TouchableOpacity>
         </View>
+
+
       </View>
       <View style={styles.cardSelect}>
         <TouchableOpacity style={styles.cardSelect_btn}><Text style={styles.cardSelect_txt}>사용가능</Text></TouchableOpacity>
         <TouchableOpacity style={styles.cardSelect_btn}><Text style={styles.cardSelect_txt}>사용완료</Text></TouchableOpacity>
       </View>
-      
+
       <View style={styles.cardList}>
         <ScrollView>
           <Pressable style={({ pressed }) => [{ marginBottom: pressed ? 0 : -180 }, styles.card ]}></Pressable>
@@ -161,18 +157,6 @@ export default function App() {
         </ScrollView>
       </View>
     </SafeAreaView> 
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-          <View style={styles.card}></View>
-
-        </ScrollView>
-
-      </View>
-    </SafeAreaView  > 
   );
 }
 
@@ -207,10 +191,6 @@ const styles = StyleSheet.create({
     padding: 10,
     elevation: 2,
     margin:10
-    },
-    borderRadius: 20,
-    padding: 10,
-    elevation: 2,
   },
   buttonOpen: {
     backgroundColor: '#F194FF',
