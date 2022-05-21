@@ -25,17 +25,6 @@ const Stack = createNativeStackNavigator();
       // error reading value
     }
   }
-
-  const storeData = async (value, key) => {
-    try {
-      const jsonValue = JSON.stringify(value)
-      await AsyncStorage.setItem(key, jsonValue)
-      console.log(jsonValue, "store")
-      setaddCardVisible(!addCardVisible)
-    } catch (e) {
-      // saving error
-    }
-  }
 */
 
   // render(
@@ -45,8 +34,6 @@ const Stack = createNativeStackNavigator();
 
     const [modalVisible, setModalVisible] = useState(false);
     const [addCardVisible, setaddCardVisible] = useState(false);
-    const [isEnabled, setIsEnabled] = useState(false);
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
   function render(){
     console.log("render");
@@ -77,28 +64,8 @@ const Stack = createNativeStackNavigator();
 
 
         <View style={styles.setting_btn}>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={() => {setModalVisible(!modalVisible);}}>
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                <Text style={styles.modalText}>SETTING</Text>
-                <View style={styles.settingText}>
-                <Text style={styles.settingText}>Alarm Setting</Text>
-            <Switch onValueChange={toggleSwitch} value={isEnabled}/>
-                </View>
-                <Pressable
-                  style={[styles.button, styles.buttonClose]}
-                  onPress={() => setModalVisible(!modalVisible)}>
-                  <Text style={styles.textStyle}>확인</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Modal>
-          <TouchableOpacity  onPress={() => setModalVisible(true)}>
-            <Ionicons name="ios-settings-outline" size={24} color="black" /></TouchableOpacity>
+          <TouchableOpacity  onPress={() => {props.navigation.navigate('SettingScreen');}}>
+          <Ionicons name="ios-settings-outline" size={24} color="black" /></ TouchableOpacity>
         </View>
       </View>
       <View style={styles.cardSelect}>
@@ -127,16 +94,41 @@ const Stack = createNativeStackNavigator();
 }
 
 
-export function AddScreen(props) {
+function AddScreen(props) {
   const [SHOP, onChangeSHOP] = React.useState('');
   const [Product, onChangeProduct] = React.useState('');
   const [Date, onChangedate] = React.useState('');
   const [Barcode, onChangeBarcode] = React.useState(false);
 
+  function setInputData(ret){
+    console.log("setInputData 실행" + ret);
+    let afterret=ret.split('\n');
+    let f_shop=afterret[1];
+    let f_product=afterret[2];
+    let f_date=afterret[12];
+    let f_barcode=afterret[4];
+    
+    onChangeSHOP(f_shop);
+    onChangeProduct(f_product);
+    onChangedate(f_date);
+    onChangeBarcode(f_barcode);
+  }
+
+  const storeData = async (value, key) => {
+    try {
+      const jsonValue = JSON.stringify(value)
+      await AsyncStorage.setItem(key, jsonValue)
+      console.log(jsonValue, "store")
+      setaddCardVisible(!addCardVisible)
+    } catch (e) {
+      // saving error
+    }
+  }
+
     return (
       <SafeAreaView style={styles.main}>
         <View style={styles.rightView}>
-          <ImagePickerComponent />
+          <ImagePickerComponent onSubmit={setInputData}/>
         </View>
         <View style={styles.centeredView}>
                 <View style={styles.settingText}>
@@ -181,12 +173,35 @@ export function AddScreen(props) {
     )
 }
 
+
+function SettingScreen(props){
+  const [isEnabled, setIsEnabled] = useState(false);
+  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  return (
+  <View>
+    <View style={styles.leftView}>
+      <TouchableOpacity  onPress={() => {props.navigation.navigate('HomeScreen');}}>
+      <Ionicons name="ios-chevron-back" size={24} color="black" />
+      </TouchableOpacity>
+    </View>
+    <View style={styles.centeredView}>
+      <Text style={styles.blacktext}>SETTING</Text>
+      <View style={styles.settingText}>
+      <Text style={styles.settingText}>Alarm Setting</Text>
+  <Switch onValueChange={toggleSwitch} value={isEnabled}/>
+      </View>
+    </View>
+  </View>
+  )
+}
+
 function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator  screenOptions={{ headerShown: false }}>
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="AddScreen" component={AddScreen} />
+        <Stack.Screen name="SettingScreen" component={SettingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -221,6 +236,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
+  },
+  leftView : {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
   },
   modalView: {
     flex: 0.5,

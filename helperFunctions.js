@@ -1,5 +1,3 @@
-import HomeScreen from './App'
-
 const API_KEY = 'AIzaSyDsFSET6AdqTZc2Sak-LZF-WpSFB6Ti1wM'; //put your key here.
 //this endpoint will tell Google to use the Vision API. We are passing in our key as well.
 const API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`;

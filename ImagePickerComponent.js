@@ -5,7 +5,7 @@ import callGoogleVisionAsync from "./helperFunctions.js";
 
 const {height:SCREEN_HEIGHT, width:SCREEN_WIDTH} = Dimensions.get('window');
 
-function ImagePickerComponent(props) {
+function ImagePickerComponent({onSubmit}) {
 
   const pickImage = async () => {
     console.log("불러오기");
@@ -17,17 +17,11 @@ function ImagePickerComponent(props) {
     if (!result.cancelled) { //if the user submits an image,
       let ret= await callGoogleVisionAsync(result.base64);
       console.log(ret.text);
-      let afterret=ret.text.split('\n');
-      let shop=afterret[1];
-      let product=afterret[4];
-      let date=afterret[12];
-      let barcode=afterret[12];
-
-      console.log(shop);
-      props.setValue("자식 데이터");
+      onSubmit=await onSubmit(ret.text);
     }
 
   };
+
   return (
     <View>
         <TouchableOpacity  style={[styles.button, styles.buttonClose, styles.rightView, styles.browseBtn]} onPress={pickImage}>
