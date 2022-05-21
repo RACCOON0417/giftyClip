@@ -1,25 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect  } from 'react';
 import { StyleSheet, Text, View, ScrollView, Dimensions, SafeAreaView, TouchableOpacity,Image, Alert, Modal, Pressable, Switch , TextInput , AppRegistry} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
+//import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons'; 
-import Barcode from 'react-barcode';
+//import Barcode from 'react-barcode';
 import ImagePickerComponent from "./ImagePickerComponent";
-import callGoogleVisionAsync from "./helperFunctions.js";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const {height:SCREEN_HEIGHT, width:SCREEN_WIDTH} = Dimensions.get('window');
 console.log(SCREEN_HEIGHT,SCREEN_WIDTH)
 
-export default function App() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [addCardVisible, setaddCardVisible] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-  const [SHOP, onChangeSHOP] = React.useState('교환처를 입력하세요.');
-  const [Product, onChangeProduct] = React.useState('제품명을 입력하세요.');
-  const [Date, onChangedate] = React.useState('유효기간을 입력하세요.');
-  const [Barcode, onChangeBarcode] = React.useState(false);
+const Stack = createNativeStackNavigator();
 
+ function HomeScreen(props) {  
+
+  /*
   const getData = async (key) => {
     try {
       const jsonValue = await AsyncStorage.getItem(key)
@@ -40,13 +36,21 @@ export default function App() {
       // saving error
     }
   }
-
+*/
 
   // render(
   //   var newCard = this.state.valueArray.map((item, key) => {})
 
   // );
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [addCardVisible, setaddCardVisible] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(false);
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+
+  function render(){
+    console.log("render");
+  }
 
   return (
     <SafeAreaView style={styles.main}>
@@ -63,47 +67,11 @@ export default function App() {
             transparent={true}
             visible={addCardVisible}
             onRequestClose={() => {setaddCardVisible(!addCardVisible);}}>
-            <View style={styles.centeredView}>
-              <View style={styles.modalView}>
-                <Text style={styles.modalText}>Add COUPON</Text>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingText}>SHOP</Text>
-                  <TextInput style={styles.input} onChangeText={onChangeSHOP} value={SHOP} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingText}>Product</Text>
-                  <TextInput style={styles.input} onChangeText={onChangeProduct} value={Product} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingText}>Date</Text>
-                  <TextInput style={styles.input} onChangeText={onChangedate} value={Date} />
-                </View>
-                <View style={styles.settingText}>
-                  <Text style={styles.settingText}>Barcode</Text>
-                  <TextInput style={styles.input} onChangeText={onChangeBarcode} value={Barcode} placeholder="바코드 숫자를 입력하세요" keyboardType="numeric"/>
-                </View>
-                <View style={styles.settingText}>
-                  <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={()=>getData(Barcode) }>
-                    <Text style={styles.textStyle}>불러오기</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={()=>storeData(makeCoupon(SHOP, Product, Date, Barcode), Barcode) }>
-                    <Text style={styles.textStyle}>Add</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.button, styles.buttonClose]}
-                    onPress={() => setaddCardVisible(!addCardVisible)}>
-                    <Text style={styles.textStyle}>Close</Text>
-                  </Pressable>
-                </View>
-                <ImagePickerComponent onSubmit={callGoogleVisionAsync} />
-              </View>
-            </View>
+            
           </Modal>
-          <TouchableOpacity  onPress={() => setaddCardVisible(true)}>
+          <TouchableOpacity  onPress={() => {
+          props.navigation.navigate('AddScreen');}
+          }>
             <Ionicons name="add" size={24} color="black" /></TouchableOpacity>
         </View>
 
@@ -132,8 +100,6 @@ export default function App() {
           <TouchableOpacity  onPress={() => setModalVisible(true)}>
             <Ionicons name="ios-settings-outline" size={24} color="black" /></TouchableOpacity>
         </View>
-
-
       </View>
       <View style={styles.cardSelect}>
         <TouchableOpacity style={styles.cardSelect_btn}><Text style={styles.cardSelect_txt}>사용가능</Text></TouchableOpacity>
@@ -158,6 +124,92 @@ export default function App() {
       </View>
     </SafeAreaView> 
   );
+}
+
+
+export function AddScreen(props) {
+  const [SHOP, onChangeSHOP] = React.useState('');
+  const [Product, onChangeProduct] = React.useState('');
+  const [Date, onChangedate] = React.useState('');
+  const [Barcode, onChangeBarcode] = React.useState(false);
+
+    return (
+      <SafeAreaView style={styles.main}>
+        <View style={styles.rightView}>
+          <ImagePickerComponent />
+        </View>
+        <View style={styles.centeredView}>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingText}>SHOP</Text>
+                  <TextInput style={styles.input} onChangeText={onChangeSHOP} placeholder="교환처를 입력하세요." value={SHOP} />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingText}>Product</Text>
+                  <TextInput style={styles.input} onChangeText={onChangeProduct} placeholder="제품명을 입력하세요." value={Product} />
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingText}>Date</Text>
+                  <TextInput style={styles.input} onChangeText={onChangedate} placeholder="유효기간을 입력하세요." value={Date} keyboardType="numeric"/>
+                </View>
+                <View style={styles.settingText}>
+                  <Text style={styles.settingText}>Barcode</Text>
+                  <TextInput style={styles.input} onChangeText={onChangeBarcode} value={Barcode} placeholder="바코드 숫자를 입력하세요" keyboardType="numeric"/>
+                </View>
+                <View style={styles.settingText}>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose,{
+                      backgroundColor : '#A6A6A6'
+                    }]}
+                    onPress={()=>storeData(makeCoupon(SHOP, Product, Date, Barcode), Barcode) }>
+                    <Text style={[styles.textStyle, {
+                      color: 'black'
+                    }]}>추가</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose,{
+                      backgroundColor : '#F0F0F0'
+                    }]}
+                    onPress={() =>{
+                      props.navigation.navigate('HomeScreen');}}>
+                    <Text style={[styles.textStyle, {
+                      color: 'black'
+                    }]}>취소</Text>
+                  </Pressable>
+                </View>
+            </View>
+        </SafeAreaView> 
+    )
+}
+
+function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator  screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="AddScreen" component={AddScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}
+
+export default App;
+
+var coupon = new Object();
+var coupon = {
+  shop : null,
+  product : null,
+  date : null,
+  barcode : null,
+  use : false,
+}
+
+function makeCoupon(SHOP, Product, Date, Barcode){
+  coupon.shop = SHOP;
+  coupon.product = Product;
+  coupon.date = Date;
+  coupon.barcode = Barcode;
+  coupon.use = false;
+  return coupon
 }
 
 const styles = StyleSheet.create({
@@ -304,43 +356,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'white',
   },
-  cardSelect_txt: {
-    fontSize : 20,
-  },
-  home_btn: {
-    flex:3,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-  },
-  add_btn: {
-    flex:1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-  },
-  setting_btn: {
-    flex:1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-  },
 });
-
-var coupon = new Object();
-var coupon = {
-  shop : null,
-  product : null,
-  date : null,
-  barcode : null,
-  use : false,
-}
-
-function makeCoupon(SHOP, Product, Date, Barcode){
-  coupon.shop = SHOP;
-  coupon.product = Product;
-  coupon.date = Date;
-  coupon.barcode = Barcode;
-  coupon.use = false;
-  return coupon
-}
