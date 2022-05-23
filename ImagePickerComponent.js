@@ -8,7 +8,6 @@ const {height:SCREEN_HEIGHT, width:SCREEN_WIDTH} = Dimensions.get('window');
 function ImagePickerComponent({onSubmit}) {
 
   const pickImage = async () => {
-    console.log("불러오기");
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       base64: true, //return base64 data.
@@ -16,7 +15,6 @@ function ImagePickerComponent({onSubmit}) {
     
     if (!result.cancelled) { //if the user submits an image,
       let ret= await callGoogleVisionAsync(result.base64);
-      console.log(ret.text);
       onSubmit=await onSubmit(ret.text);
     }
 
@@ -24,7 +22,7 @@ function ImagePickerComponent({onSubmit}) {
 
   return (
     <View>
-        <TouchableOpacity  style={[styles.button, styles.buttonClose, styles.rightView, styles.browseBtn]} onPress={pickImage}>
+        <TouchableOpacity  onPress={pickImage}>
           <Text style={styles.blacktext}>갤러리에서 불러오기</Text>
         </TouchableOpacity >
     </View>
