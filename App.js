@@ -14,28 +14,53 @@ import Barcode from './Barcode';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
+// import Select from "react-dropdown-select";
 
 const {height:SCREEN_HEIGHT, width:SCREEN_WIDTH} = Dimensions.get('window');
 console.log(SCREEN_HEIGHT,SCREEN_WIDTH)
 
 const Stack = createNativeStackNavigator();
-function CardItem ({shop,product,date,barcode}){
-  return (
-    <View>
-      <Pressable style={({ pressed }) => [{ marginBottom: pressed ? 0 : -160 }, styles.card ]}>
-          <View style={styles.centeredView}>
-            <Text style={styles.cardText}> {shop}</Text>
-            <Text style={styles.cardText}> {product} </Text>
-            <Barcode style={styles.barcode} value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:1.2 }}/>
-          </View>
-        </Pressable>
-    </View>
-  )
-}
 
-
- function HomeScreen(props) {
+{/* 홈 스크린 */}
+function HomeScreen(props) {
   const [CARDLIST, setCARDLIST] = useState([]);
+  const [cardOption, setcardOption] = useState(1);
+  const [cardMargin, setcardMargin] = useState(0);
+
+  const CardItem = ({shop,product,date,barcode})=>{
+    const storeData = async (value, key) => {
+      try {
+        const jsonValue = JSON.stringify(value)
+        await AsyncStorage.setItem(key, jsonValue)
+        console.log(jsonValue, "store")
+        setaddCardVisible(!addCardVisible)
+      } catch (e) {
+        // saving error
+      }
+    }
+    return (
+      <View style={styles.cardView}>
+        {cardOption ? null:(          
+            <View>
+              <View style={styles.setting_btn}>
+                <TouchableOpacity  onPress={() => {storeData(makeCoupon(shop, product, date, barcode, true), barcode)}}>
+                <Ionicons name="checkmark-circle-outline" size={24} color="blue"/></TouchableOpacity>
+              </View>
+              <View style={styles.setting_btn}>
+                <TouchableOpacity  onPress={() => {removeValue(barcode)}}>
+                <Ionicons name="trash-outline" size={24} color="red"/></TouchableOpacity>
+              </View>
+            </View>)}
+        <Pressable style={({ pressed }) => [{ marginBottom: pressed ? 0 : (cardMargin ? 0:-160)}, styles.card,{ backgroundColor : "white"} ]}>
+            <View style={styles.centeredView}>
+              <Text style={styles.cardText}> {shop}</Text>
+              <Text style={styles.cardText}> {product} </Text>
+              <Barcode style={styles.barcode} value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:1.2 }}/>
+            </View>
+        </Pressable>
+      </View>
+    )
+  }
 
   const getUnusedCard = async (val) => {
     let CARD_RENDER = "";
@@ -45,7 +70,6 @@ function CardItem ({shop,product,date,barcode}){
         const cardInfo = await AsyncStorage.getItem(keys[key])
         cardInfo = JSON.parse(cardInfo) 
         if (val==cardInfo["use"]){
-            //CARD_RENDER += cardInfo.shop
             let CARD_Shop = cardInfo.shop
             let CARD_Barcode = cardInfo.barcode
             let CARD_Product = cardInfo.product
@@ -74,7 +98,7 @@ function CardItem ({shop,product,date,barcode}){
   
 
   const renderItem = ({item})=>( 
-    <CardItem shop={item.shop} product={item.product} date={item.date} barcode={item.barcode}/>
+    <CardItem shop={item.shop} product={item.product} date={item.date} barcode={item.barcode} />
   );
 
   return (
@@ -91,6 +115,11 @@ function CardItem ({shop,product,date,barcode}){
         <View style={styles.setting_btn}>
           <TouchableOpacity  onPress={() => {props.navigation.navigate('AddScreen');}}>
           <Ionicons name="add" size={24} color="black"/></TouchableOpacity>
+        </View>
+
+        <View style={styles.setting_btn}>
+          <TouchableOpacity  onPress={() => {setcardOption(!cardOption),setcardMargin(!cardMargin)}}>
+          <Ionicons name="pencil-outline" size={24} color="black"/></TouchableOpacity>
         </View>
 
         <View style={styles.setting_btn}>
@@ -123,6 +152,8 @@ function AddScreen(props) {
   const [Product, onChangeProduct] = React.useState('');
   const [Date, onChangedate] = React.useState('');
   const [Barcode, onChangeBarcode] = React.useState(false);
+  const [Color, onChangeColor] = React.useState(false);
+  const [selectedColor, setselectedColor] = useState();
 
   {/* OCR 데이터 정리 */}
   function setInputData(ret){
@@ -235,17 +266,29 @@ function AddScreen(props) {
           <Text style={styles.settingText}>Date</Text>
           <TextInput style={styles.input} onChangeText={onChangedate} placeholder="0000년 00월 00일" value={Date}/>
         </View>
+            
         <View style={styles.settingText}>
           <Text style={styles.settingText}>Barcode</Text>
           <TextInput style={styles.input} onChangeText={onChangeBarcode} value={Barcode} placeholder="바코드 숫자를 입력하세요" keyboardType="numeric"/>
         </View>
+
+        {/* <View style={styles.settingText}>
+        
+        <Select options={options} onChange={(values) => this.setValues(values)} /></View> */}
+
+        <View style={styles.settingText}>
+          <Text style={styles.settingText}>Color</Text>
+          <TextInput style={styles.input} onChangeText={onChangeColor} value={Color} placeholder="색을 입력하세요 " keyboardType="numeric"/>
+        </View>
+
+
         {/* 확인 취소 버튼 */}
         <View>
           <Pressable
             style={[styles.button, styles.buttonClose,{
               backgroundColor : '#38AA61'
             }]}
-            onPress={()=>storeData(makeCoupon(SHOP, Product, Date, Barcode), Barcode) }>
+            onPress={()=>storeData(makeCoupon(SHOP, Product, Date, Barcode, Color, false), Barcode) }>
             <Text style={[styles.textStyle, {
               color: 'black'
             }]}>추가</Text>
@@ -427,12 +470,13 @@ var coupon = {
   barcode : null,
   use : false,
 }
-function makeCoupon(SHOP, Product, Date, Barcode){
+function makeCoupon(SHOP, Product, Date, Barcode, color, use){
   coupon.shop = SHOP;
   coupon.product = Product;
   coupon.date = Date;
   coupon.barcode = Barcode;
-  coupon.use = false;
+  coupon.color = color;
+  coupon.use = use;
   return coupon
 }
 
@@ -533,8 +577,13 @@ const styles = StyleSheet.create({
     flex:12,
     backgroundColor: 'white',
   },
+  cardView:{
+    flex:1,
+    flexDirection : "row",
+  },
   card : {
     //marginBottom: -150,
+    flex : 5,
     height: SCREEN_HEIGHT/4,
     backgroundColor: 'white',
     paddingVertical: 8,
@@ -555,7 +604,7 @@ const styles = StyleSheet.create({
     flex:1,
     flexDirection : "row",
     alignItems : "center",
-    fontSize : 25,
+    fontSize : 20,
 
   },
   cardSelect_btn: {
