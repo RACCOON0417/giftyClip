@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
       height : 40
     },
     blacktext : {
-      textsize : 16,
+      fontSize : 16,
       color: 'black',
       fontWeight: 'bold',
       textAlign: 'center',

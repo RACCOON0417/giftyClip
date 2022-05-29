@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef} from 'react';
-import { StyleSheet, Text, View, ScrollView, Dimensions, SafeAreaView, TouchableOpacity,Image, Alert, Modal, Pressable, Switch , TextInput , AppRegistry, Platform ,FlatList} from 'react-native';
+import { StyleSheet, Text, View, Animated, ScrollView, Dimensions, SafeAreaView, TouchableOpacity,Image, Alert, Modal, Pressable, Switch , TextInput , AppRegistry, Platform ,FlatList} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons'; 
@@ -13,6 +13,7 @@ import Barcode from './Barcode';
 
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import { getCameraRollPermissionsAsync } from 'expo-image-picker';
 
 // import Select from "react-dropdown-select";
 
@@ -25,9 +26,10 @@ const Stack = createNativeStackNavigator();
 function HomeScreen(props) {
   const [CARDLIST, setCARDLIST] = useState([]);
   const [cardOption, setcardOption] = useState(1);
-  const [cardMargin, setcardMargin] = useState(0);
+  const [cardMargin, setcardMargin]=useState(0);
+  const [NowSelect,setNowSelect]=useState("");
 
-  const CardItem = ({shop,product,date,barcode})=>{
+  const CardItem = ({shop,product,date,barcode,color})=>{
     const storeData = async (value, key) => {
       try {
         const jsonValue = JSON.stringify(value)
@@ -38,8 +40,19 @@ function HomeScreen(props) {
         // saving error
       }
     }
+
+    function selectedCardStyle(){
+      if(NowSelect==barcode){
+        return {
+          marginBottom:0
+        }
+        
+      }else return { marginBottom : -160}
+
+    }
+
     return (
-      <View style={styles.cardView}>
+      <View style={[styles.cardView]}>
         {cardOption ? null:(          
             <View>
               <View style={styles.setting_btn}>
@@ -51,11 +64,15 @@ function HomeScreen(props) {
                 <Ionicons name="trash-outline" size={24} color="red"/></TouchableOpacity>
               </View>
             </View>)}
-        <Pressable style={({ pressed }) => [{ marginBottom: pressed ? 0 : (cardMargin ? 0:-160)}, styles.card,{ backgroundColor : "white"} ]}>
+        <Pressable onPress={()=>setNowSelect(barcode)} style={[selectedCardStyle(), styles.card,{backgroundColor:color}]}>
             <View style={styles.centeredView}>
-              <Text style={styles.cardText}> {shop}</Text>
-              <Text style={styles.cardText}> {product} </Text>
-              <Barcode style={styles.barcode} value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:1.2 }}/>
+               <Text style={[{alignSelf:'flex-start', position: 'absolute', top:10, left:10},styles.cardText]}> {shop}</Text>
+              <Text style={[{alignSelf:'flex-end', position:'absolute',top:10, right:10},styles.cardText]}> {"~"+date}</Text>
+              
+              <Text style={[{alignSelf:'flex-start', position: 'absolute', top:40, left:10, fontWeight:'bold'},styles.cardText]}> {product} </Text>
+              <View style={{backgroundColor:'white',width:'100%', alignItems:'center'}}>
+                <Barcode value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:1.2, }}/>
+              </View>
             </View>
         </Pressable>
       </View>
@@ -74,8 +91,9 @@ function HomeScreen(props) {
             let CARD_Barcode = cardInfo.barcode
             let CARD_Product = cardInfo.product
             let CARD_date = cardInfo.date
+            let CARD_color = cardInfo.color
             console.log(CARD_Shop,CARD_Barcode);
-            temList.push(Object({shop:CARD_Shop, product:CARD_Product, date:CARD_date, barcode:CARD_Barcode}));
+            temList.push(Object({shop:CARD_Shop, product:CARD_Product, date:CARD_date, barcode:CARD_Barcode,color:CARD_color}));
         }
     }   
     setCARDLIST(temList);
@@ -93,12 +111,13 @@ function HomeScreen(props) {
   }
 
   useEffect(() => {
+    console.log("useEffect 실행");
     getUnusedCard(false);
     },[]);
   
 
   const renderItem = ({item})=>( 
-    <CardItem shop={item.shop} product={item.product} date={item.date} barcode={item.barcode} />
+    <CardItem shop={item.shop} product={item.product} date={item.date} barcode={item.barcode} color={item.color} />
   );
 
   return (
@@ -113,7 +132,7 @@ function HomeScreen(props) {
         <View style={{flex:2}}></View>
 
         <View style={styles.setting_btn}>
-          <TouchableOpacity  onPress={() => {props.navigation.navigate('AddScreen');}}>
+          <TouchableOpacity  onPress={() => {props.navigation.push('AddScreen');}}>
           <Ionicons name="add" size={24} color="black"/></TouchableOpacity>
         </View>
 
@@ -123,7 +142,7 @@ function HomeScreen(props) {
         </View>
 
         <View style={styles.setting_btn}>
-          <TouchableOpacity  onPress={() => {props.navigation.navigate('SettingScreen');}}>
+          <TouchableOpacity  onPress={() => {props.navigation.push('SettingScreen');}}>
           <Ionicons name="ios-settings-outline" size={24} color="black" /></ TouchableOpacity>
         </View>
       </View>
@@ -152,8 +171,7 @@ function AddScreen(props) {
   const [Product, onChangeProduct] = React.useState('');
   const [Date, onChangedate] = React.useState('');
   const [Barcode, onChangeBarcode] = React.useState(false);
-  const [Color, onChangeColor] = React.useState(false);
-  const [selectedColor, setselectedColor] = useState();
+  const [Color, onChangeColor] = React.useState("gainsboro");
 
   {/* OCR 데이터 정리 */}
   function setInputData(ret){
@@ -220,33 +238,33 @@ function AddScreen(props) {
     console.log('Done.')
   }
 
+  useEffect(() => {
+    onChangeSHOP('');
+    onChangeProduct('');
+    onChangedate('');
+    onChangeBarcode(false);
+    onChangeColor('gainsboro');
+    },[]);
+  
+  function applySelectStyle(mycolor){
+    if(mycolor==Color){
+      return styles.selectColorOutline;
+    }else return styles.nonSelectColorOutline;
+  }
   return (
     <SafeAreaView style={styles.main}>
       {/* 로고, 추가, 설정 버튼 */}
       <View style={styles.topMenu}>
-
-        <TouchableOpacity style={styles.home_btn} onPress={() => {props.navigation.navigate('HomeScreen');}}>
-          <Image style={styles.logo} source={{uri: 'https://cdn.discordapp.com/attachments/971817216905478205/971817234861293608/logo.png',}}/>
-        </TouchableOpacity>
-
-        <View style={{flex:2}}></View>
-
-        <View style={styles.setting_btn}>
-          <TouchableOpacity  >
-          <Ionicons name="add" size={24} color="black"/></TouchableOpacity>
-        </View>
-
-        <View style={styles.setting_btn}>
-          <TouchableOpacity  onPress={() => {props.navigation.navigate('SettingScreen');}}>
-          <Ionicons name="ios-settings-outline" size={24} color="black" /></ TouchableOpacity>
-        </View>
+      <View style={styles.setting_btn}>
+      <TouchableOpacity style={{ position:'absolute', left:'0%',marginLeft:20,top:'0%'}} onPress={()=>{props.navigation.push('HomeScreen');}}><Ionicons  name="chevron-back-outline" size={55} color="black" /></TouchableOpacity>
+      </View>
       </View>
       
       {/* 이미지 OCR */}
-      <View style={styles.cardSelect}>
+      <View style={[styles.cardSelect, { backgroundColor: 'rgba(0,0,0,0.0)'}]}>
       <Pressable
             style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#A6A6A6'
+              backgroundColor : '#DADADA',height:40,position:'absolute',right:'0%',marginRight:30,borderColor:'black',borderWidth:1
             }]}>
         <ImagePickerComponent onSubmit={setInputData}/>
       </Pressable>
@@ -255,21 +273,21 @@ function AddScreen(props) {
       {/* 수기 입력파트 */}
       <View style={styles.cardList}>
         <View style={styles.settingText}>
-          <Text style={styles.settingText}>SHOP</Text>
-          <TextInput style={styles.input} onChangeText={onChangeSHOP} placeholder="교환처를 입력하세요." value={SHOP} />
+          <Text style={styles.settingText}>브랜드</Text>
+          <TextInput style={styles.input} onChangeText={onChangeSHOP} placeholder="교환처를 입력하세요." maxLength={10} value={SHOP} />
         </View>
         <View style={styles.settingText}>
-          <Text style={styles.settingText}>Product</Text>
-          <TextInput style={styles.input} onChangeText={onChangeProduct} placeholder="제품명을 입력하세요." value={Product} />
+          <Text style={styles.settingText}>이름</Text>
+          <TextInput style={styles.input} onChangeText={onChangeProduct} placeholder="제품명을 입력하세요." maxLength={10}  value={Product} />
         </View>
         <View style={styles.settingText}>
-          <Text style={styles.settingText}>Date</Text>
-          <TextInput style={styles.input} onChangeText={onChangedate} placeholder="0000년 00월 00일" value={Date}/>
+          <Text style={styles.settingText}>사용기간</Text>
+          <TextInput style={styles.input} onChangeText={onChangedate} placeholder="0000년 00월 00일"  value={Date}/>
         </View>
             
         <View style={styles.settingText}>
-          <Text style={styles.settingText}>Barcode</Text>
-          <TextInput style={styles.input} onChangeText={onChangeBarcode} value={Barcode} placeholder="바코드 숫자를 입력하세요" keyboardType="numeric"/>
+          <Text style={styles.settingText}>바코드 숫자</Text>
+          <TextInput style={styles.input} onChangeText={onChangeBarcode} value={Barcode} placeholder="바코드 숫자를 입력하세요" returnKeyType="done" keyboardType="number-pad"/>
         </View>
 
         {/* <View style={styles.settingText}>
@@ -278,21 +296,49 @@ function AddScreen(props) {
 
         <View style={styles.settingText}>
           <Text style={styles.settingText}>Color</Text>
-          <TextInput style={styles.input} onChangeText={onChangeColor} value={Color} placeholder="색을 입력하세요 " keyboardType="numeric"/>
+          <Pressable onPress={()=>{onChangeColor("gainsboro");}} style={[styles.colorPicker,{left:100,backgroundColor : 'gainsboro'},applySelectStyle("gainsboro")]}/>
+          <Pressable onPress={()=>{onChangeColor("lightpink");}} style={[styles.colorPicker,{left:150,backgroundColor : 'lightpink',},applySelectStyle("lightpink")]}/>
+          <Pressable onPress={()=>{onChangeColor("#a9dec8");} } style={[styles.colorPicker,{left:200,backgroundColor : '#a9dec8'},applySelectStyle("#a9dec8")]}/>
+          <Pressable onPress={()=>{onChangeColor("lightblue");}} style={[styles.colorPicker,{left:250,backgroundColor : 'lightblue'},applySelectStyle("lightblue")]}/>
+          <Pressable onPress={()=>{onChangeColor("#cba9de");}} style={[styles.colorPicker,{left:300,backgroundColor : '#cba9de'},applySelectStyle("#cba9de")]}/>
         </View>
 
 
         {/* 확인 취소 버튼 */}
         <View>
+          <View style={{height:70}}>
           <Pressable
             style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#38AA61'
+              backgroundColor : '#A6A6A6',
+              position: 'absolute',
+              left:'50%', width:85,height:50,
+              marginLeft:-100
             }]}
-            onPress={()=>storeData(makeCoupon(SHOP, Product, Date, Barcode, Color, false), Barcode) }>
+            onPress={()=>{
+              storeData(makeCoupon(SHOP, Product, Date, Barcode, Color, false), Barcode);
+              props.navigation.push('HomeScreen',{ dataChanged : true}); } }>
             <Text style={[styles.textStyle, {
-              color: 'black'
+              color: 'black',
+              fontSize:20,
+              top:5
             }]}>추가</Text>
           </Pressable>
+          <Pressable
+            style={[styles.button, styles.buttonClose,{
+              backgroundColor : '#F0F0F0',
+              position: 'absolute',
+              left:'50%', width:85,height:50,
+              marginLeft:20
+            }]}
+            onPress={() =>{
+              props.navigation.push('HomeScreen',{ dataChanged : false});}}>
+            <Text style={[styles.textStyle, {
+              color: 'black',
+              fontSize:20,
+              top:5
+            }]}>취소</Text>
+          </Pressable>
+          </View>
           <Pressable
             style={[styles.button, styles.buttonClose,{
               backgroundColor : '#E8887E'
@@ -311,16 +357,7 @@ function AddScreen(props) {
               color: 'black'
             }]}>전체삭제</Text>
           </Pressable>
-          <Pressable
-            style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#F0F0F0'
-            }]}
-            onPress={() =>{
-              props.navigation.navigate('HomeScreen');}}>
-            <Text style={[styles.textStyle, {
-              color: 'black'
-            }]}>취소</Text>
-          </Pressable>
+
         </View>
       </View>
     </SafeAreaView> 
@@ -417,7 +454,7 @@ function SettingScreen(props){
     {/* 로고, 추가, 설정 버튼 */}
     <View style={styles.topMenu}>
 
-      <TouchableOpacity style={styles.home_btn} onPress={() => {props.navigation.navigate('HomeScreen');}}>
+      <TouchableOpacity style={styles.home_btn} onPress={() => {props.navigation.push('HomeScreen');}}>
         <Image style={styles.logo} source={{uri: 'https://cdn.discordapp.com/attachments/971817216905478205/971817234861293608/logo.png',}}/>
       </TouchableOpacity>
 
@@ -429,7 +466,7 @@ function SettingScreen(props){
       </View>
 
       <View style={styles.setting_btn}>
-        <TouchableOpacity  onPress={() => {props.navigation.navigate('SettingScreen');}}>
+        <TouchableOpacity  onPress={() => {props.navigation.push('SettingScreen');}}>
         <Ionicons name="ios-settings-outline" size={24} color="black" /></ TouchableOpacity>
       </View>
     </View>
@@ -539,19 +576,21 @@ const styles = StyleSheet.create({
     fontSize: 8,
     flexDirection: "row",
     margin:10,
-    fontSize:20,
+    marginLeft:20,
+    fontSize:16,
     alignItems: 'center',
   },
   input: {
     flex:3,
     height: 35,
+    width: 20,
     margin: 12,
     borderBottomColor:'#9B9EA3',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     padding: 10,
     flexDirection: "row",
     margin:0,
-    fontSize:20,
+    fontSize:16,
   },
     
   topMenu : {
@@ -584,11 +623,9 @@ const styles = StyleSheet.create({
   card : {
     //marginBottom: -150,
     flex : 5,
-    height: SCREEN_HEIGHT/4,
+    height: SCREEN_HEIGHT/3.5,
     backgroundColor: 'white',
     paddingVertical: 8,
-    borderWidth: 2,
-    borderColor: 'black',
     borderRadius: 15,
     margin:15,
     shadowColor: '#000',
@@ -633,5 +670,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'white',
+  },
+  colorPicker:{
+    flex:1,
+    position: 'absolute',
+    borderRadius : 15,
+    width:30,
+    height : 30
+  },
+  selectColorOutline:{
+    borderWidth: 2,
+    borderColor: 'black',
+    borderStyle : "dashed"
+  },
+  nonSelectColorOutline :{
+    borderWidth : 0,
   },
 });
