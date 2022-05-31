@@ -56,11 +56,12 @@ function HomeScreen(props) {
         {cardOption ? null:(          
             <View>
               <View style={styles.setting_btn}>
-                <TouchableOpacity  onPress={() => {storeData(makeCoupon(shop, product, date, barcode, true), barcode)}}>
-                <Ionicons name="checkmark-circle-outline" size={24} color="blue"/></TouchableOpacity>
+                <TouchableOpacity  onPress={() => {storeData(makeCoupon(shop, product, date, barcode, color, true), barcode),
+                  setcardOption(!cardOption),setcardMargin(!cardMargin),getUnusedCard(false)}}>
+                <Ionicons name="arrow-redo-circle-outline" size={24} color="blue"/></TouchableOpacity>
               </View>
               <View style={styles.setting_btn}>
-                <TouchableOpacity  onPress={() => {removeValue(barcode)}}>
+                <TouchableOpacity  onPress={() => {removeValue(barcode),getUnusedCard(true);}}>
                 <Ionicons name="trash-outline" size={24} color="red"/></TouchableOpacity>
               </View>
             </View>)}
@@ -71,7 +72,7 @@ function HomeScreen(props) {
               
               <Text style={[{alignSelf:'flex-start', position: 'absolute', top:40, left:10, fontWeight:'bold'},styles.cardText]}> {product} </Text>
               <View style={{backgroundColor:'white',width:'100%', alignItems:'center'}}>
-                <Barcode value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:1.2, }}/>
+                <Barcode value={barcode} options={{ format: 'CODE128', background: 'white', font:'',width:2, }}/>
               </View>
             </View>
         </Pressable>
@@ -256,18 +257,18 @@ function AddScreen(props) {
       {/* 로고, 추가, 설정 버튼 */}
       <View style={styles.topMenu}>
       <View style={styles.setting_btn}>
-      <TouchableOpacity style={{ position:'absolute', left:'0%',marginLeft:20,top:'0%'}} onPress={()=>{props.navigation.push('HomeScreen');}}><Ionicons  name="chevron-back-outline" size={55} color="black" /></TouchableOpacity>
+      <TouchableOpacity style={{ position:'absolute', left:'0%',marginLeft:20,top:'0%'}} onPress={()=>{props.navigation.push('HomeScreen');}}><Ionicons  name="chevron-back-outline" size={30} color="black" /></TouchableOpacity>
       </View>
       </View>
       
       {/* 이미지 OCR */}
       <View style={[styles.cardSelect, { backgroundColor: 'rgba(0,0,0,0.0)'}]}>
-      <Pressable
-            style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#DADADA',height:40,position:'absolute',right:'0%',marginRight:30,borderColor:'black',borderWidth:1
-            }]}>
-        <ImagePickerComponent onSubmit={setInputData}/>
-      </Pressable>
+        <Pressable
+              style={[styles.button, styles.buttonClose,{
+                backgroundColor : '#DADADA',height:40,position:'absolute',right:'0%',marginRight:30,borderColor:'black',borderWidth:1,
+              }]}>
+          <ImagePickerComponent onSubmit={setInputData}/>
+        </Pressable>
       </View>
 
       {/* 수기 입력파트 */}
@@ -338,25 +339,11 @@ function AddScreen(props) {
               top:5
             }]}>취소</Text>
           </Pressable>
+          
           </View>
-          <Pressable
-            style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#E8887E'
-            }]}
-            onPress={()=>removeValue(Barcode) }>
-            <Text style={[styles.textStyle, {
-              color: 'black'
-            }]}>삭제</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, styles.buttonClose,{
-              backgroundColor : '#EE0001'
-            }]}
-            onPress={()=>clearAll()}>
-            <Text style={[styles.textStyle, {
-              color: 'black'
-            }]}>전체삭제</Text>
-          </Pressable>
+          <View style={{margin:50}}></View>
+          
+
 
         </View>
       </View>
@@ -423,65 +410,104 @@ function SettingScreen(props){
 
 
   const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  const [switchValue, setswitchValue] = useState("");
+  const toggleSwitch = () => (setIsEnabled(!switchValue),setswitchValue(!switchValue))
   const setPush = async () => {
       let keys = await AsyncStorage.getAllKeys()
+      console.log("getAllKeys") 
       for (let key in keys){
           const cardInfo = await AsyncStorage.getItem(keys[key])
+          console.log("getItem")
           cardInfo = JSON.parse(cardInfo)
-          if (!cardInfo.use){
-            noti(new Date(dateParser(cardInfo.date)),5000);
+          console.log(cardInfo.use)
+          if (cardInfo.use==false){
+            noti(new Date(dateParser(cardInfo.date)),5000)
           }
       }
+      setIsEnabled(false);
   };
+
   const clerPush = async () => {
     noti(new Date(),-1);
     console.log("clerPush!")
   }
 
-  {isEnabled ? (setPush()) : (clerPush()) }
+  {isEnabled ? (
+
+      setPush()
+) : (
+
+     clerPush()
+) }
 
   function dateParser(str) {
     let y = str.slice(0, 4);
     let m = str.slice(6, 8);
     let d = str.slice(10, 12);
-    
+    console.log(y+'-'+m+'-'+d)
     return y+'-'+m+'-'+d
   }
 
   return (
     <SafeAreaView style={styles.main}>
-    {/* 로고, 추가, 설정 버튼 */}
-    <View style={styles.topMenu}>
 
-      <TouchableOpacity style={styles.home_btn} onPress={() => {props.navigation.push('HomeScreen');}}>
-        <Image style={styles.logo} source={{uri: 'https://cdn.discordapp.com/attachments/971817216905478205/971817234861293608/logo.png',}}/>
-      </TouchableOpacity>
-
-      <View style={{flex:2}}></View>
-
-      <View style={styles.setting_btn}>
-        <TouchableOpacity>
-        <Ionicons name="add" size={24} color="black"/></TouchableOpacity>
-      </View>
-
-      <View style={styles.setting_btn}>
-        <TouchableOpacity  onPress={() => {props.navigation.push('SettingScreen');}}>
-        <Ionicons name="ios-settings-outline" size={24} color="black" /></ TouchableOpacity>
-      </View>
-    </View>
-
-
-    {/* 메인화면 */}
-    <View style={styles.cardList}>
-      {/* 확인 취소 버튼 */}
-        <View style={styles.settingText}>
-          <Text style={styles.settingText}>알람설정</Text>
-          <Switch style={styles.input} onValueChange={toggleSwitch} value={isEnabled}/>
+        {/* 헤더 */}
+        <View style={styles.topMenu}>
+            <View style={styles.setting_btn}>
+                <TouchableOpacity style={{ position: 'absolute', left: '0%', marginLeft: 20, top: '0%' }} onPress={() => { props.navigation.push('HomeScreen'); }}><Ionicons name="chevron-back-outline" size={30} color="black" /></TouchableOpacity>
+            </View>
         </View>
-    </View>
-    </SafeAreaView> 
-  )
+
+        {/* 메인화면 */}
+        <View style={styles.option_main}>
+            {/* 설정 화면 */}
+
+            {/*사용 방법*/}
+            <View style={styles.option_box}>
+                <Text style={styles.option_large_text}>사용방법</Text>
+            </View>
+
+            {/*사용 방법 설명*/}
+            <View style={styles.option_box2}>
+                <Text style={styles.option_small_text}>
+                    갤러리에서 기프티콘을 불러오거나, {'\n'}
+                    사용자가 직접 데이터를 입력하여 등록한다 {'\n'}
+                    사용자가 임의로 기프티콘 색을 변경하거나, {'\n'}
+                    미사용된 기프티콘만 따로 볼 수있다
+                </Text>
+            </View>
+
+            {/*설정 변경*/}
+            <View style={styles.option_box}>
+                <Text style={styles.option_large_text}>설정 </Text>
+            </View>
+
+            <View style={styles.option_box3}>
+                <Text style={styles.option_small_text}>알림설정</Text>
+                <Switch style={styles.option_notification_switch} onValueChange={toggleSwitch} value={switchValue} />
+            </View>
+
+
+            <View style={styles.option_box}>
+                <Text style={styles.option_large_text}>기타 </Text>
+            </View>
+
+            <View style={styles.option_box2}>
+                <Text style={styles.option_small_text}>개발자 정보</Text>
+                <Text style={styles.option_small_text2}>남현정 jeong_opo@naver.com</Text>
+                <Text style={styles.option_small_text2}>김현섭 nill0806@gmail.com</Text>
+                <Text style={styles.option_small_text2}>이민혁 wsx1341@kakao.com</Text>
+            </View>
+
+            <View style={styles.option_box2}>
+                <Text style={styles.option_small_text}>애플리케이션 버전</Text>
+                <Text style={styles.option_small_text2}>0.2.1</Text>
+            </View>
+
+        </View>
+
+    </SafeAreaView>
+)
 }
 
 {/* 네비게이터 */}
@@ -686,4 +712,78 @@ const styles = StyleSheet.create({
   nonSelectColorOutline :{
     borderWidth : 0,
   },
+  option_main: {
+    flex: 13.5,
+    flexDirection: "column",
+    alignItems: 'stretch',
+    justifyContent: 'flex-start',
+},
+
+option_box: {
+    flexDirection: "row",
+    paddingLeft: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    /*borderBottomColor: 'black',
+    borderBottomWidth: 1,*/
+    marginTop: 12,
+    marginBottom: 6,
+},
+
+option_box2: {
+    flexDirection: "column",
+    paddingLeft: 10,
+    margin: 2,
+    marginVertical: 8,
+    /*borderBottomColor: 'black',
+    borderBottomWidth: 1,*/
+},
+option_box3: {
+    flexDirection: "row",
+    paddingLeft: 10,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginVertical: 4,
+    /*borderBottomColor: 'black',
+    borderBottomWidth: 1,*/
+},
+option_large_text: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: "bold",
+    margin: 2,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingLeft: 10,
+    marginVertical: 8,
+
+},
+
+
+option_small_text: {
+    fontSize: 20,
+    margin: 2,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    paddingLeft: 10,
+    marginVertical: 8,
+},
+option_small_text2: {
+    fontSize: 16,
+    margin: 2,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    paddingLeft: 10,
+    color: 'gray',
+},
+
+option_notification_switch: {
+    height: 35,
+    borderBottomColor: '#9B9EA3',
+    borderBottomWidth: 1,
+    flexDirection: "column",
+    alignItems: 'flex-end',
+    marginRight: 10,
+},
 });
